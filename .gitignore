@@ -38,3 +38,7 @@ coverage/
 # Misc
 *.tsbuildinfo
 .turbo/
+
+# Vite config build artifacts
+client/vite.config.js
+client/vite.config.d.ts

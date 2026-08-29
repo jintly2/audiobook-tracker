@@ -42,6 +42,8 @@ export const DRIZZLE_DATABASE = 'DRIZZLE_DATABASE';
           max: 10,
           idle_timeout: 20,
           connect_timeout: 10,
+          // Supabase 连接必须启用 SSL
+          ssl: 'require',
         });
 
         return drizzle(queryClient);
