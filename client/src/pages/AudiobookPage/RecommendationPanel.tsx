@@ -83,9 +83,8 @@ const RecommendationPanel: React.FC = () => {
   };
 
   return (
-    <div>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full flex-wrap bg-muted/50">
             {tabs.map((tab) => (
               <TabsTrigger key={tabKeyToString(tab.key)} value={tabKeyToString(tab.key)}>
@@ -93,7 +92,6 @@ const RecommendationPanel: React.FC = () => {
               </TabsTrigger>
             ))}
           </TabsList>
-        </Tabs>
         <Button
           variant="outline"
           size="sm"
@@ -138,7 +136,7 @@ const RecommendationPanel: React.FC = () => {
           )}
         </TabsContent>
       ))}
-    </div>
+    </Tabs>
   );
 };
 
