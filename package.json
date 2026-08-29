@@ -1,0 +1,19 @@
+{
+  "name": "audiobook-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "有声书追踪器 - 基于 Supabase 的完整全栈应用",
+  "scripts": {
+    "dev": "concurrently -n server,client -c amber,cyan \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "seed": "cd server && npm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
