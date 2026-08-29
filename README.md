@@ -7,7 +7,7 @@
 - 📅 **日历视图**：按日查看听书记录，直观展示收听进度
 - 📋 **列表管理**：支持搜索、筛选、排序，快速定位记录
 - 📊 **数据统计**：总时长、记录数、平均分、状态分布一目了然
-- ✨ **精选推荐**：内置猫耳/漫播 广播剧与有声剧推荐数据
+- ✨ **精选推荐**：内置猫耳/漫播 广播剧与有声剧推荐数据，支持"换一批"随机刷新
 - ⭐ **星级评分**：5 星评分系统，记录你的喜好
 - 👤 **双模式使用**：
   - **游客模式**：免注册，数据保存在本地浏览器
@@ -22,7 +22,7 @@
 | 后端 | NestJS 10 + Drizzle ORM |
 | 数据库 | PostgreSQL (Supabase) |
 | 认证 | Supabase Auth (JWT) |
-| 部署 | 前后端分离，前端可部署 Vercel，后端可部署 Railway/Fly.io |
+| 部署 | GitHub Pages 静态托管 + Supabase 云数据库 |
 
 ## 快速开始
 
@@ -57,8 +57,9 @@ cp .env.example .env
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_API_BASE_URL=http://localhost:3001/api
 ```
+> 说明：GitHub Pages 托管版前端**直连 Supabase**（PostgREST + Auth），无需自建后端；
+> 仓库中的 `server/`（NestJS）仅供本地自托管或需要后端代理的场景使用。
 
 ### 4. 安装依赖并启动
 
@@ -127,32 +128,47 @@ audiobook-tracker/
 
 ## 部署说明
 
-### 前端部署（Vercel / Netlify）
+### 线上部署（GitHub Pages + Supabase）⭐ 推荐
+
+前端为纯静态应用，**直连 Supabase**（Auth + PostgREST），无需自建后端即可全功能运行：
+
+1. 推送代码到 GitHub 仓库
+2. 在仓库 **Settings → Secrets and variables → Actions** 配置两个 Secret：
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+3. 启用 **Settings → Pages**，Source 选择 **GitHub Actions**
+4. 推送 `main` 分支后，`.github/workflows/deploy.yml` 自动构建并部署
+
+线上地址：`https://<username>.github.io/<repo>/`
+
+### 前端部署（Vercel / Netlify 亦可）
 
 1. 将 `client/` 目录作为项目根目录部署
 2. 配置环境变量：
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_API_BASE_URL`（后端 API 地址）
 3. Build 命令：`npm run build`
 4. Output 目录：`dist`
 
-### 后端部署（Railway / Fly.io / Render）
+### 后端自托管（可选，仅本地/自建场景）
+
+仓库内 `server/` 为 NestJS 后端，仅在需要后端代理时使用：
 
 1. 将 `server/` 目录部署
 2. 配置环境变量：
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SUPABASE_JWT_SECRET`
+   - `DATABASE_URL`（Supabase Session Pooler 连接串）
    - `NODE_ENV=production`
 3. Build 命令：`npm run build`
 4. Start 命令：`npm run start:prod`
 
 ## 开发说明
 
-- 推荐模块使用种子数据 + 随机推荐，无需依赖外部 API
+- 推荐板块内置猫耳/漫播 广播剧与有声剧种子数据，支持"换一批"随机刷新
 - 游客模式使用 localStorage 存储，无需后端
-- 登录模式通过 JWT 调用后端 API，数据存入 Supabase
+- 注册模式直连 Supabase Auth + PostgREST，数据存入云数据库
 - 所有 UI 组件为 shadcn 风格，使用 Tailwind CSS 4 实现
 
 ## License

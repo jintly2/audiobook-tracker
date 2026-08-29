@@ -5,6 +5,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import RecommendationCard from './RecommendationCard';
 import {
   Empty,
@@ -13,7 +14,7 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from '@/components/ui/empty';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, RefreshCw } from 'lucide-react';
 import { getRecommendationBatch } from '@/api/recommendation';
 import type {
   RecommendationItem,
@@ -35,10 +36,14 @@ const tabs: { key: TabKey; label: string }[] = [
 
 const tabKeyToString = (k: TabKey): string => `${k.platform}-${k.category}`;
 
+const BATCH_SIZE = 10;
+
 const RecommendationPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>(tabKeyToString(tabs[0].key));
   const [items, setItems] = useState<RecommendationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // refreshKey 变化时重新拉取随机批次（实现“换一批”）
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const current = tabs.find(
@@ -54,7 +59,7 @@ const RecommendationPanel: React.FC = () => {
         const result: RecommendationItem[] = await getRecommendationBatch({
           platform: current.key.platform,
           category: current.key.category,
-          limit: 12,
+          limit: BATCH_SIZE,
         });
         if (!cancelled) {
           setItems(result);
@@ -71,23 +76,41 @@ const RecommendationPanel: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [activeTab]);
+  }, [activeTab, refreshKey]);
+
+  const handleShuffle = (): void => {
+    setRefreshKey((k) => k + 1);
+  };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="mb-4 w-full flex-wrap bg-muted/50">
-        {tabs.map((tab) => (
-          <TabsTrigger key={tabKeyToString(tab.key)} value={tabKeyToString(tab.key)}>
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+    <div>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full flex-wrap bg-muted/50">
+            {tabs.map((tab) => (
+              <TabsTrigger key={tabKeyToString(tab.key)} value={tabKeyToString(tab.key)}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleShuffle}
+          disabled={loading}
+          className="shrink-0"
+        >
+          <RefreshCw className="mr-1 size-3.5" />
+          换一批
+        </Button>
+      </div>
 
       {tabs.map((tab) => (
         <TabsContent key={tabKeyToString(tab.key)} value={tabKeyToString(tab.key)}>
           {loading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[1, 2, 3, 4].map((i) => (
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div
                   key={i}
                   className="h-64 animate-pulse rounded-xl border border-border bg-card"
@@ -115,7 +138,7 @@ const RecommendationPanel: React.FC = () => {
           )}
         </TabsContent>
       ))}
-    </Tabs>
+    </div>
   );
 };
 
