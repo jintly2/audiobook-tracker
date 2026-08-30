@@ -1,41 +1,15 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import type {
   RecommendationItem,
   RecommendationPlatform,
   RecommendationCategory,
-  RecommendationBatchParams,
 } from '@/types/api';
 
-const PLATFORM_LABEL: Record<RecommendationPlatform, string> = {
-  missevan: '猫耳',
-  manbo: '漫播',
-};
-
-const CATEGORY_LABEL: Record<RecommendationCategory, string> = {
-  audio_drama: '广播剧',
-  audiobook: '有声剧',
-};
-
-/**
- * 数据库行 -> 前端推荐条目
- */
-function mapRow(row: Record<string, unknown>): RecommendationItem {
-  const platform = row.platform as RecommendationPlatform;
-  const category = row.category as RecommendationCategory;
-  return {
-    id: String(row.id),
-    title: String(row.title),
-    platform,
-    category,
-    platformLabel: PLATFORM_LABEL[platform] ?? platform,
-    categoryLabel: CATEGORY_LABEL[category] ?? category,
-    voiceActors: row.voice_actors ? String(row.voice_actors) : '',
-    originalWork: row.original_work ? String(row.original_work) : '',
-    synopsis: row.synopsis ? String(row.synopsis) : '',
-    coverUrl: row.cover_url ? String(row.cover_url) : '',
-    sourceType: (row.source_type as RecommendationItem['sourceType']) ?? 'seed',
-    blPair: row.bl_pair === true,
-  };
+interface BatchParams {
+  platform: RecommendationPlatform;
+  category: RecommendationCategory;
+  blOnly?: boolean;
+  limit?: number;
 }
 
 export async function getAllRecommendations(
@@ -43,27 +17,18 @@ export async function getAllRecommendations(
   category: RecommendationCategory,
   blOnly = false,
 ): Promise<RecommendationItem[]> {
-  let query = supabase
-    .schema('audiobook')
-    .from('recommendations')
-    .select('*');
+  const items = await api.get<RecommendationItem[]>('/recommendation/all', {
+    platform,
+    category,
+  });
   if (blOnly) {
-    query = query.eq('bl_pair', true);
-  } else {
-    query = query.eq('platform', platform).eq('category', category);
+    return items.filter((item) => (item as any).blPair === true);
   }
-  query = query.order('sort_order', { ascending: true }).order('title', { ascending: true });
-
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return (data ?? []).map(mapRow);
+  return items;
 }
 
-/**
- * 随机获取一批推荐（客户端洗牌，数据量小，一次拉全量即可）
- */
 export async function getRecommendationBatch(
-  params: RecommendationBatchParams,
+  params: BatchParams,
 ): Promise<RecommendationItem[]> {
   const all = await getAllRecommendations(
     params.platform,

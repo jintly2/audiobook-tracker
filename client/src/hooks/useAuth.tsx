@@ -6,7 +6,7 @@ import {
   useContext,
   ReactNode,
 } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api, getToken, setToken, clearToken } from '@/lib/api';
 import type { AuthUser } from '@/types/api';
 
 const GUEST_KEY = 'audiobook_guest_mode';
@@ -29,10 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // 初始化：检查 session 或游客模式
   useEffect(() => {
     const init = async () => {
-      // 先检查游客模式
       const guestFlag = localStorage.getItem(GUEST_KEY) === '1';
       if (guestFlag) {
         setIsGuest(true);
@@ -40,54 +38,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 检查 Supabase session
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.user) {
-        setUser({
-          id: data.session.user.id,
-          email: data.session.user.email,
-        });
+      const token = getToken();
+      if (token) {
+        try {
+          const userData = await api.get<AuthUser>('/auth/me');
+          setUser(userData);
+        } catch {
+          clearToken();
+        }
       }
       setLoading(false);
     };
 
     init();
-
-    // 监听 auth 状态变化
-    const { data: subscription } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-          });
-          setIsGuest(false);
-          localStorage.removeItem(GUEST_KEY);
-        } else {
-          setUser(null);
-        }
-      },
-    );
-
-    return () => {
-      subscription.subscription.unsubscribe();
-    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
+    const result = await api.post<{ user: AuthUser; accessToken: string }>(
+      '/auth/login',
+      { email, password },
+    );
+    setToken(result.accessToken);
+    setUser(result.user);
+    setIsGuest(false);
+    localStorage.removeItem(GUEST_KEY);
   }, []);
 
   const signup = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    if (error) throw error;
+    const result = await api.post<{ user: AuthUser; accessToken: string }>(
+      '/auth/signup',
+      { email, password },
+    );
+    setToken(result.accessToken);
+    setUser(result.user);
+    setIsGuest(false);
+    localStorage.removeItem(GUEST_KEY);
   }, []);
 
   const logout = useCallback(async () => {
@@ -96,13 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(GUEST_KEY);
       return;
     }
-    await supabase.auth.signOut();
+    clearToken();
     setUser(null);
   }, [isGuest]);
 
   const enterGuestMode = useCallback(() => {
     setIsGuest(true);
     setUser(null);
+    clearToken();
     localStorage.setItem(GUEST_KEY, '1');
   }, []);
 
