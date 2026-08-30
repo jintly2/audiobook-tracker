@@ -41,6 +41,7 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
   defaultDate,
 }) => {
   const [title, setTitle] = useState('');
+  const [startEpisode, setStartEpisode] = useState(0);
   const [currentEpisode, setCurrentEpisode] = useState(0);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
   const [durationMinutes, setDurationMinutes] = useState(0);
@@ -54,6 +55,7 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
     if (open) {
       if (editingRecord) {
         setTitle(editingRecord.title);
+        setStartEpisode(editingRecord.startEpisode);
         setCurrentEpisode(editingRecord.currentEpisode);
         setTotalEpisodes(editingRecord.totalEpisodes);
         setDurationMinutes(editingRecord.durationMinutes);
@@ -63,6 +65,7 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
         setNotes(editingRecord.notes);
       } else {
         setTitle('');
+        setStartEpisode(0);
         setCurrentEpisode(0);
         setTotalEpisodes(0);
         setDurationMinutes(0);
@@ -77,11 +80,18 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!title.trim()) return;
+    const start = Number(startEpisode);
+    const end = Number(currentEpisode);
+    if (end > 0 && start > 0 && end < start) {
+      alert('听到的集数不能小于开始的集数');
+      return;
+    }
     setSaving(true);
     try {
       await onSave({
         title: title.trim(),
-        currentEpisode: Number(currentEpisode),
+        startEpisode: start,
+        currentEpisode: end,
         totalEpisodes: Number(totalEpisodes),
         durationMinutes: Number(durationMinutes),
         recordDate,
@@ -119,15 +129,27 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="current">当前集数</Label>
+              <Label htmlFor="start">从第几集</Label>
+              <Input
+                id="start"
+                type="number"
+                min={0}
+                value={startEpisode}
+                onChange={(e) => setStartEpisode(Number(e.target.value))}
+                placeholder="0"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="current">听到第几集</Label>
               <Input
                 id="current"
                 type="number"
                 min={0}
                 value={currentEpisode}
                 onChange={(e) => setCurrentEpisode(Number(e.target.value))}
+                placeholder="0"
               />
             </div>
             <div className="space-y-2">

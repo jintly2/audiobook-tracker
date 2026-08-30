@@ -129,6 +129,7 @@ function create(dto: CreateAudiobookDto): Promise<AudiobookRecord> {
   const record: AudiobookRecord = {
     id: crypto.randomUUID(),
     title: dto.title,
+    startEpisode: dto.startEpisode ?? 0,
     currentEpisode: dto.currentEpisode,
     totalEpisodes: dto.totalEpisodes,
     durationMinutes: dto.durationMinutes,

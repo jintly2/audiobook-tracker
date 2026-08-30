@@ -15,6 +15,7 @@ function mapRow(row: Record<string, unknown>): AudiobookRecord {
   return {
     id: String(row.id),
     title: String(row.title),
+    startEpisode: Number(row.start_episode ?? 0),
     currentEpisode: Number(row.current_episode ?? 0),
     totalEpisodes: Number(row.total_episodes ?? 0),
     durationMinutes: Number(row.duration_minutes ?? 0),
@@ -149,6 +150,7 @@ export async function create(dto: CreateAudiobookDto): Promise<AudiobookRecord> 
     .schema('audiobook').from('audiobook_records')
     .insert({
       title: dto.title,
+      start_episode: dto.startEpisode ?? 0,
       current_episode: dto.currentEpisode,
       total_episodes: dto.totalEpisodes,
       duration_minutes: dto.durationMinutes,
@@ -169,6 +171,7 @@ export async function update(
 ): Promise<AudiobookRecord> {
   const patch: Record<string, unknown> = {};
   if (dto.title !== undefined) patch.title = dto.title;
+  if (dto.startEpisode !== undefined) patch.start_episode = dto.startEpisode;
   if (dto.currentEpisode !== undefined) patch.current_episode = dto.currentEpisode;
   if (dto.totalEpisodes !== undefined) patch.total_episodes = dto.totalEpisodes;
   if (dto.durationMinutes !== undefined) patch.duration_minutes = dto.durationMinutes;

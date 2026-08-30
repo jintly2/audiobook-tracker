@@ -71,7 +71,9 @@ const AudiobookCard: React.FC<AudiobookCardProps> = ({
             <div>
               <div className="mb-1 flex justify-between text-xs text-muted-foreground">
                 <span>
-                  {record.currentEpisode}/{record.totalEpisodes} 集
+                  {record.startEpisode > 0
+                    ? `${record.startEpisode}→${record.currentEpisode} 集`
+                    : `${record.currentEpisode}/${record.totalEpisodes} 集`}
                 </span>
                 <span>{progress}%</span>
               </div>

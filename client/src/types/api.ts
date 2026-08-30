@@ -5,6 +5,7 @@ export type AudiobookStatus = 'listening' | 'finished' | 'shelved';
 export interface AudiobookRecord {
   id: string;
   title: string;
+  startEpisode: number;
   currentEpisode: number;
   totalEpisodes: number;
   durationMinutes: number;
@@ -38,6 +39,7 @@ export interface AudiobookStatsResponse {
 
 export interface CreateAudiobookDto {
   title: string;
+  startEpisode?: number;
   currentEpisode: number;
   totalEpisodes: number;
   durationMinutes: number;
