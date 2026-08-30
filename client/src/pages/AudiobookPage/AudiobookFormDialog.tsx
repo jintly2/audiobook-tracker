@@ -79,6 +79,18 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
     }
   }, [open, editingRecord, defaultDate]);
 
+  const uniqueTitles = React.useMemo(() => {
+    const latestByTitle = new Map<string, AudiobookRecord>();
+    for (const r of [...(records ?? [])].sort(
+      (a, b) =>
+        b.recordDate.localeCompare(a.recordDate) ||
+        b.createdAt.localeCompare(a.createdAt),
+    )) {
+      if (!latestByTitle.has(r.title)) latestByTitle.set(r.title, r);
+    }
+    return Array.from(latestByTitle.values());
+  }, [records]);
+
   const handleTitleChange = (value: string): void => {
     setTitle(value);
     if (editingRecord) return;
@@ -92,8 +104,16 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
         b.recordDate.localeCompare(a.recordDate) ||
         b.createdAt.localeCompare(a.createdAt),
     )[0];
-    if (latest && latest.currentEpisode > 0) {
-      setStartEpisode(latest.currentEpisode);
+    if (latest) {
+      if (latest.currentEpisode > 0) {
+        setStartEpisode(latest.currentEpisode);
+      }
+      if (latest.totalEpisodes > 0) {
+        setTotalEpisodes(latest.totalEpisodes);
+      }
+      if (latest.durationMinutes > 0) {
+        setDurationMinutes(latest.durationMinutes);
+      }
     }
   };
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -143,9 +163,15 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
               id="title"
               value={title}
               onChange={(e) => handleTitleChange(e.target.value)}
-              placeholder="请输入有声书标题"
+              placeholder="输入或下拉选择已有剧名"
+              list="audiobook-titles"
               required
             />
+            <datalist id="audiobook-titles">
+              {uniqueTitles.map((r) => (
+                <option key={r.id} value={r.title} />
+              ))}
+            </datalist>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
