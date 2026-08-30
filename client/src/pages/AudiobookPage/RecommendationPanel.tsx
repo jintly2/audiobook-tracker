@@ -22,43 +22,42 @@ import type {
   RecommendationCategory,
 } from '@/types/api';
 
-interface TabKey {
-  platform: RecommendationPlatform;
-  category: RecommendationCategory;
+interface TabDef {
+  id: string;
+  label: string;
+  platform?: RecommendationPlatform;
+  category?: RecommendationCategory;
+  blOnly?: boolean;
 }
 
-const tabs: { key: TabKey; label: string }[] = [
-  { key: { platform: 'missevan', category: 'audio_drama' }, label: '猫耳·广播剧' },
-  { key: { platform: 'missevan', category: 'audiobook' }, label: '猫耳·有声书' },
-  { key: { platform: 'manbo', category: 'audio_drama' }, label: '漫播·广播剧' },
-  { key: { platform: 'manbo', category: 'audiobook' }, label: '漫播·有声书' },
+const tabs: TabDef[] = [
+  { id: 'missevan-audio_drama', label: '猫耳·广播剧', platform: 'missevan', category: 'audio_drama' },
+  { id: 'missevan-audiobook', label: '猫耳·有声书', platform: 'missevan', category: 'audiobook' },
+  { id: 'manbo-audio_drama', label: '漫播·广播剧', platform: 'manbo', category: 'audio_drama' },
+  { id: 'manbo-audiobook', label: '漫播·有声书', platform: 'manbo', category: 'audiobook' },
+  { id: 'bl', label: '双男主', blOnly: true },
 ];
-
-const tabKeyToString = (k: TabKey): string => `${k.platform}-${k.category}`;
 
 const BATCH_SIZE = 10;
 
 const RecommendationPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>(tabKeyToString(tabs[0].key));
+  const [activeTab, setActiveTab] = useState<string>(tabs[0].id);
   const [items, setItems] = useState<RecommendationItem[]>([]);
   const [loading, setLoading] = useState(true);
   // refreshKey 变化时重新拉取随机批次（实现“换一批”）
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const current = tabs.find(
-      (t) => tabKeyToString(t.key) === activeTab,
-    );
+    const current = tabs.find((t) => t.id === activeTab);
     if (!current) return;
-
     let cancelled = false;
     setLoading(true);
-
     const fetchData = async (): Promise<void> => {
       try {
         const result: RecommendationItem[] = await getRecommendationBatch({
-          platform: current.key.platform,
-          category: current.key.category,
+          platform: current.platform ?? 'missevan',
+          category: current.category ?? 'audio_drama',
+          blOnly: current.blOnly,
           limit: BATCH_SIZE,
         });
         if (!cancelled) {
@@ -70,9 +69,7 @@ const RecommendationPanel: React.FC = () => {
         if (!cancelled) setLoading(false);
       }
     };
-
     fetchData();
-
     return () => {
       cancelled = true;
     };
@@ -85,13 +82,13 @@ const RecommendationPanel: React.FC = () => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <div className="mb-4 flex items-center justify-between gap-3">
-          <TabsList className="w-full flex-wrap bg-muted/50">
-            {tabs.map((tab) => (
-              <TabsTrigger key={tabKeyToString(tab.key)} value={tabKeyToString(tab.key)}>
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <TabsList className="w-full flex-wrap bg-muted/50">
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         <Button
           variant="outline"
           size="sm"
@@ -103,15 +100,14 @@ const RecommendationPanel: React.FC = () => {
           换一批
         </Button>
       </div>
-
       {tabs.map((tab) => (
-        <TabsContent key={tabKeyToString(tab.key)} value={tabKeyToString(tab.key)}>
+        <TabsContent key={tab.id} value={tab.id}>
           {loading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                 <div
                   key={i}
-                  className="h-64 animate-pulse rounded-xl border border-border bg-card"
+                  className="h-40 animate-pulse rounded-xl border border-border bg-card"
                 />
               ))}
             </div>

@@ -34,21 +34,27 @@ function mapRow(row: Record<string, unknown>): RecommendationItem {
     synopsis: row.synopsis ? String(row.synopsis) : '',
     coverUrl: row.cover_url ? String(row.cover_url) : '',
     sourceType: (row.source_type as RecommendationItem['sourceType']) ?? 'seed',
+    blPair: row.bl_pair === true,
   };
 }
 
 export async function getAllRecommendations(
   platform: RecommendationPlatform,
   category: RecommendationCategory,
+  blOnly = false,
 ): Promise<RecommendationItem[]> {
-  const { data, error } = await supabase
-    .schema('audiobook').from('recommendations')
-    .select('*')
-    .eq('platform', platform)
-    .eq('category', category)
-    .order('sort_order', { ascending: true })
-    .order('title', { ascending: true });
+  let query = supabase
+    .schema('audiobook')
+    .from('recommendations')
+    .select('*');
+  if (blOnly) {
+    query = query.eq('bl_pair', true);
+  } else {
+    query = query.eq('platform', platform).eq('category', category);
+  }
+  query = query.order('sort_order', { ascending: true }).order('title', { ascending: true });
 
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []).map(mapRow);
 }
@@ -59,7 +65,11 @@ export async function getAllRecommendations(
 export async function getRecommendationBatch(
   params: RecommendationBatchParams,
 ): Promise<RecommendationItem[]> {
-  const all = await getAllRecommendations(params.platform, params.category);
+  const all = await getAllRecommendations(
+    params.platform,
+    params.category,
+    params.blOnly,
+  );
   const limit = params.limit ?? 10;
   // Fisher-Yates 洗牌
   const shuffled = [...all];

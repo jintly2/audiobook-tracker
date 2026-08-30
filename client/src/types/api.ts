@@ -76,6 +76,7 @@ export interface RecommendationItem {
   synopsis: string;
   coverUrl: string;
   sourceType: 'seed' | 'sync';
+  blPair: boolean;
 }
 
 export interface RecommendationBatchParams {
@@ -83,6 +84,7 @@ export interface RecommendationBatchParams {
   category: RecommendationCategory;
   limit?: number;
   seed?: number;
+  blOnly?: boolean;
 }
 
 export interface SyncResult {
