@@ -42,7 +42,7 @@ export async function getAllRecommendations(
   category: RecommendationCategory,
 ): Promise<RecommendationItem[]> {
   const { data, error } = await supabase
-    .from('recommendations')
+    .schema('audiobook').from('recommendations')
     .select('*')
     .eq('platform', platform)
     .eq('category', category)

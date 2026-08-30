@@ -37,7 +37,7 @@ export async function getList(
   params: AudiobookListParams,
 ): Promise<AudiobookListResponse> {
   let query = supabase
-    .from('audiobook_records')
+    .schema('audiobook').from('audiobook_records')
     .select('*', { count: 'exact' });
 
   if (params.status && params.status !== 'all') {
@@ -80,7 +80,7 @@ export async function getList(
 
 export async function getStats(): Promise<AudiobookStatsResponse> {
   const { data, error } = await supabase
-    .from('audiobook_records')
+    .schema('audiobook').from('audiobook_records')
     .select('*');
 
   if (error) throw new Error(error.message);
@@ -134,7 +134,7 @@ export async function getStats(): Promise<AudiobookStatsResponse> {
 
 export async function getById(id: string): Promise<AudiobookRecord> {
   const { data, error } = await supabase
-    .from('audiobook_records')
+    .schema('audiobook').from('audiobook_records')
     .select('*')
     .eq('id', id)
     .maybeSingle();
@@ -146,7 +146,7 @@ export async function getById(id: string): Promise<AudiobookRecord> {
 export async function create(dto: CreateAudiobookDto): Promise<AudiobookRecord> {
   // RLS 会通过 user_id 默认值 auth.uid() 自动归属当前用户
   const { data, error } = await supabase
-    .from('audiobook_records')
+    .schema('audiobook').from('audiobook_records')
     .insert({
       title: dto.title,
       current_episode: dto.currentEpisode,
@@ -178,7 +178,7 @@ export async function update(
   if (dto.notes !== undefined) patch.notes = dto.notes;
 
   const { data, error } = await supabase
-    .from('audiobook_records')
+    .schema('audiobook').from('audiobook_records')
     .update(patch)
     .eq('id', id)
     .select()
@@ -189,7 +189,7 @@ export async function update(
 
 export async function remove(id: string): Promise<void> {
   const { error } = await supabase
-    .from('audiobook_records')
+    .schema('audiobook').from('audiobook_records')
     .delete()
     .eq('id', id);
   if (error) throw new Error(error.message);
