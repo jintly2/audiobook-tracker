@@ -31,6 +31,7 @@ interface AudiobookFormDialogProps {
   editingRecord: AudiobookRecord | null;
   onSave: (data: CreateAudiobookDto) => Promise<void> | void;
   defaultDate: string;
+  records?: AudiobookRecord[];
 }
 
 const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
@@ -39,6 +40,7 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
   editingRecord,
   onSave,
   defaultDate,
+  records,
 }) => {
   const [title, setTitle] = useState('');
   const [startEpisode, setStartEpisode] = useState(0);
@@ -77,6 +79,23 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
     }
   }, [open, editingRecord, defaultDate]);
 
+  const handleTitleChange = (value: string): void => {
+    setTitle(value);
+    if (editingRecord) return;
+    if (!value.trim()) return;
+    const same = (records ?? []).filter(
+      (r) => r.title.trim() === value.trim(),
+    );
+    if (same.length === 0) return;
+    const latest = [...same].sort(
+      (a, b) =>
+        b.recordDate.localeCompare(a.recordDate) ||
+        b.createdAt.localeCompare(a.createdAt),
+    )[0];
+    if (latest && latest.currentEpisode > 0) {
+      setStartEpisode(latest.currentEpisode);
+    }
+  };
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -123,7 +142,7 @@ const AudiobookFormDialog: React.FC<AudiobookFormDialogProps> = ({
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="请输入有声书标题"
               required
             />

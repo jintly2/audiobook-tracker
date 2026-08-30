@@ -101,18 +101,32 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             >
               <span className="text-sm">{day}</span>
               {hasRecords && (
-                <div className="mt-1 flex gap-0.5">
-                  {dayRecords.slice(0, 3).map((r, i) => (
+                <div className="mt-1 flex w-full flex-col items-center gap-0.5 px-0.5">
+                  {dayRecords.slice(0, 2).map((r, i) => (
                     <span
                       key={i}
                       className={cn(
-                        'size-1.5 rounded-full',
-                        r.status === 'listening' && 'bg-amber-500',
-                        r.status === 'finished' && 'bg-green-500',
-                        r.status === 'shelved' && 'bg-gray-400',
+                        'max-w-full truncate rounded-full px-1 text-[9px] leading-3',
+                        r.status === 'listening' &&
+                          'bg-amber-100 text-amber-700',
+                        r.status === 'finished' &&
+                          'bg-green-100 text-green-700',
+                        r.status === 'shelved' &&
+                          'bg-gray-200 text-gray-500',
                       )}
-                    />
+                    >
+                      {r.startEpisode > 0
+                        ? `${r.startEpisode}→${r.currentEpisode}`
+                        : r.totalEpisodes > 0
+                          ? `${r.currentEpisode}集`
+                          : '✓'}
+                    </span>
                   ))}
+                  {dayRecords.length > 2 && (
+                    <span className="text-[9px] leading-3 text-muted-foreground">
+                      +{dayRecords.length - 2}
+                    </span>
+                  )}
                 </div>
               )}
             </button>

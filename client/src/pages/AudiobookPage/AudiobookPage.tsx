@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, LogOut, Search, Calendar, List, Sparkles, BarChart3 } from 'lucide-react';
+import { Plus, LogOut, Search, Calendar, List, Sparkles, BarChart3, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { localAudiobookApi } from '@/hooks/useLocalAudiobook';
@@ -198,6 +198,41 @@ const AudiobookPage: React.FC = () => {
     setDeleteId(id);
   };
 
+  const handleExportCSV = (): void => {
+    const header = ['标题', '日期', '从第几集', '听到第几集', '总集数', '时长(分)', '评分', '状态', '备注'];
+    const statusMap = {
+      listening: '在听',
+      finished: '已听完',
+      shelved: '搁置',
+    } as const;
+    const rows: (string | number)[][] = records.map((r) => [
+      r.title,
+      r.recordDate,
+      r.startEpisode,
+      r.currentEpisode,
+      r.totalEpisodes,
+      r.durationMinutes,
+      r.rating,
+      statusMap[r.status],
+      (r.notes || '').replace(/,/g, '，').replace(/\n/g, ' '),
+    ]);
+    const csv =
+      '\uFEFF' +
+      [header, ...rows]
+        .map((row) => row.map((v) => `"${String(v)}"`).join(','))
+        .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `有声书记录_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`已导出 ${records.length} 条记录`);
+  };
+
   const confirmDelete = async (): Promise<void> => {
     if (!deleteId) return;
     try {
@@ -300,6 +335,15 @@ const AudiobookPage: React.FC = () => {
                 />
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleExportCSV}
+                  title="导出 CSV"
+                  disabled={records.length === 0}
+                >
+                  <Download className="size-4" />
+                </Button>
                 <Select
                   value={filterStatus}
                   onValueChange={(v) => setFilterStatus(v as AudiobookStatus | 'all')}
@@ -381,6 +425,7 @@ const AudiobookPage: React.FC = () => {
         editingRecord={editingRecord}
         onSave={handleSave}
         defaultDate={selectedDate || getTodayStr()}
+        records={records}
       />
 
       <DayDetailDialog
