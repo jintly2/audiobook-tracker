@@ -4,8 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
 export default defineConfig({
-  // GitHub Pages 子路径托管
-  base: '/audiobook-tracker/',
+  base: '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

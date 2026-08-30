@@ -8,6 +8,15 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 
+// 用户表
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // 听书记录表
 export const audiobookRecord = pgTable('audiobook_records', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -40,6 +49,8 @@ export const recommendation = pgTable('recommendations', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export type User = typeof users.$inferSelect;
+export type UserInsert = typeof users.$inferInsert;
 export type AudiobookRecord = typeof audiobookRecord.$inferSelect;
 export type AudiobookRecordInsert = typeof audiobookRecord.$inferInsert;
 export type Recommendation = typeof recommendation.$inferSelect;
